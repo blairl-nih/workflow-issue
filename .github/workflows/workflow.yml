@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+
+  build:
+
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      matrix:
+        operating-system: [ubuntu-latest, windows-latest, macOS-latest]
+
+    steps:
+
+      - name: Get code.
+        uses: actions/checkout@v2
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '3.1.*'
+
+      - name: Build with dotnet
+        run: dotnet build --configuration Release /WarnAsError
+
+      - name: Unit Tests (with Coverage)
+        run: |
+              if [ "$RUNNER_OS" == "Windows" ]; then
+                dotnet test
+              else
+                dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=lcov /p:CoverletOutput=../../lcov test/**
+              fi
+        shell: bash
